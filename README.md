@@ -8,6 +8,17 @@ The project is structured around a reproducible workflow:
 - train a small CNN for comparison
 - save metrics, ROC curves, confusion matrices, and summary tables for analysis
 
+## Project Background
+
+This public repository is a cleaned-up adaptation of earlier wildfire-detection work I contributed to during an internship with Other Orb LLC, followed by a class-project extension where I added a logistic-regression baseline and a more explicit comparison pipeline.
+
+The goal of this version is to present the project in a way that is reproducible and interview-friendly:
+- preserve the core wildfire-classification problem
+- show the difference between a simple baseline and a stronger CNN approach
+- package the work as a standalone public project rather than an internal or classroom-only artifact
+
+This repository is intended as a public-facing adaptation, not a mirror of internship code. It does not include proprietary code, private datasets, or internal company materials.
+
 ## Highlights
 
 - Reproducible dataset-splitting script with explicit labeling rules and split metadata
@@ -24,6 +35,17 @@ The strongest run in the current project copy is the `64x64` CNN:
 | CNN | 64x64 | 0.879 | 0.942 | 0.874 | 0.863 | 0.869 |
 
 Additional results are summarized in [results/summary_table.md](results/summary_table.md) and [results/summary_metrics.md](results/summary_metrics.md).
+
+## Why Include Logistic Regression?
+
+The logistic-regression models are there on purpose. I added them in the class-project adaptation to establish a simple baseline before comparing against the CNN.
+
+That comparison makes the project stronger because it answers a more useful question than "can a CNN classify these images?":
+- how much performance do we get from a simple linear baseline?
+- when does a higher-capacity model justify its extra complexity?
+- what do we lose when we flatten the image and remove most spatial structure?
+
+In the current results, the CNN outperforms the logistic-regression baselines clearly, which helps justify the move to the more expressive model.
 
 ## Example Artifacts
 
@@ -92,3 +114,5 @@ PYTHONPATH=. python -m pytest tests
 ## Data Note
 
 The original dataset is not included in this public-facing copy. See [data/README.md](data/README.md) for the expected directory layout and how the project uses `data/raw/` and `data/splits/`.
+
+This also means the repository is safe to share publicly as a project adaptation: it documents the workflow and results without exposing private or non-public source materials.

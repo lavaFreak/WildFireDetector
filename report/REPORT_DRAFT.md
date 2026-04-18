@@ -4,6 +4,12 @@
 
 Build a binary image classifier that distinguishes wildfire images from no-fire images, compare a simple linear baseline against a small CNN, and document the tradeoffs between model complexity and performance.
 
+## Background
+
+This project grew out of earlier wildfire-detection work I contributed to during an internship with Other Orb LLC. For a later class project, I adapted that general problem into a more self-contained experiment by adding logistic-regression baselines and organizing the workflow around reproducible dataset preparation, training, and result summaries.
+
+This public repository is a presentation-oriented adaptation of that work. It is meant to show the engineering workflow and modeling comparison clearly without exposing proprietary code or internal materials.
+
 ## Workflow
 
 1. Collect raw wildfire and no-fire images.
@@ -28,6 +34,7 @@ The CNN at `64x64` clearly outperforms the logistic-regression baselines in both
 - Logistic regression provides a useful baseline, but it loses too much spatial information when the images are flattened.
 - The CNN captures stronger visual features and improves both discrimination and false-positive control.
 - The pipeline is structured to make experiments reproducible: fixed split generation, saved run artifacts, and aggregate summaries under `results/`.
+- Including the logistic-regression baseline makes the CNN results more meaningful, because the project shows why the additional model complexity is worth using.
 
 ## Limitations
 
