@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import cv2
 import numpy as np
@@ -83,6 +83,7 @@ def _build_xy(
 
 def load_splits(
     splits_root: str | Path = "data/splits",
+    extra_train_roots: Iterable[str | Path] | None = None,
     size: int = 16,
     grayscale: bool = True,
     shuffle_train: bool = True,
@@ -103,6 +104,18 @@ def load_splits(
     X_train, y_train = _build_xy(train_dir, size=size, grayscale=grayscale)
     X_val, y_val = _build_xy(val_dir, size=size, grayscale=grayscale)
     X_test, y_test = _build_xy(test_dir, size=size, grayscale=grayscale)
+
+    if extra_train_roots:
+        extra_x_train: list[np.ndarray] = [X_train]
+        extra_y_train: list[np.ndarray] = [y_train]
+        for extra_root in extra_train_roots:
+            extra_train_dir = Path(extra_root) / "train"
+            X_extra, y_extra = _build_xy(extra_train_dir, size=size, grayscale=grayscale)
+            extra_x_train.append(X_extra)
+            extra_y_train.append(y_extra)
+
+        X_train = np.concatenate(extra_x_train, axis=0)
+        y_train = np.concatenate(extra_y_train, axis=0)
 
     if shuffle_train:
         rng = np.random.default_rng(seed)

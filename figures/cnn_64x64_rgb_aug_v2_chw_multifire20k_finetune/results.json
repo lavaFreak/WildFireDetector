@@ -1,0 +1,89 @@
+{
+  "config": {
+    "model": "CNN",
+    "architecture": "wildfire_cnn_v2",
+    "run_name": "cnn_64x64_rgb_aug_v2_chw_multifire20k_finetune",
+    "size": 64,
+    "splits_root": "/Users/garion/Desktop/WildFireDetector/data/splits",
+    "extra_train_roots": [],
+    "epochs_max": 10,
+    "init_checkpoint": "/Users/garion/Work/WildFireDetector/figures/cnn_64x64_rgb_aug_v2_chw_multifire20k/best_model.pt",
+    "batch_size": 32,
+    "lr": 0.0003,
+    "patience": 3,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "device": "cpu",
+    "grayscale": false,
+    "rgb_tensor_layout": "chw",
+    "augment": true,
+    "hflip_prob": 0.5,
+    "brightness_jitter": 0.15,
+    "contrast_jitter": 0.15,
+    "noise_std": 0.02,
+    "variant": "rgb-wildfire_cnn_v2-aug"
+  },
+  "best_val_auc": 0.9963598162806606,
+  "best_epoch": 6,
+  "test": {
+    "accuracy": 0.9646892655367232,
+    "auc": 0.991258390741914,
+    "confusion_matrix": [
+      [
+        360,
+        19
+      ],
+      [
+        6,
+        323
+      ]
+    ]
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.13851764824643148,
+      "val_auc": 0.9945356526271214
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.11261834545681874,
+      "val_auc": 0.9951871396462425
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.11969959401689909,
+      "val_auc": 0.9957653343757125
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.1050244503764107,
+      "val_auc": 0.9956757549105835
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.10365324649119786,
+      "val_auc": 0.9953907293397178
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.09172564520336249,
+      "val_auc": 0.9963598162806606
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.09852439204833525,
+      "val_auc": 0.9955861754454541
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.09517250994366466,
+      "val_auc": 0.9963435291051826
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.0922031639253392,
+      "val_auc": 0.9953174370500668
+    }
+  ]
+}

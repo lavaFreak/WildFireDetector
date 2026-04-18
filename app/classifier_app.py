@@ -40,7 +40,16 @@ class WildfireClassifierApp:
         ttk.Combobox(
             controls,
             textvariable=self.model_var,
-            values=(BEST_MODEL_NAME, "ensemble", "cnn_64x64", "cnn_16x16"),
+            values=(
+                BEST_MODEL_NAME,
+                "ensemble",
+                "cnn_64x64_rgb_aug_v2_chw",
+                "cnn_64x64_rgb_aug_v2_chw_multifire20k",
+                "cnn_64x64_rgb_aug_v2_multifire20k_finetune",
+                "cnn_64x64_rgb_aug_v2",
+                "cnn_64x64",
+                "cnn_16x16",
+            ),
             state="readonly",
             width=22,
         ).grid(row=0, column=3, padx=6, pady=6)

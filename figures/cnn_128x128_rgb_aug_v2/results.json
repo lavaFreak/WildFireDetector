@@ -1,0 +1,93 @@
+{
+  "config": {
+    "model": "CNN",
+    "architecture": "wildfire_cnn_v2",
+    "run_name": "cnn_128x128_rgb_aug_v2",
+    "size": 128,
+    "splits_root": "/Users/garion/Desktop/WildFireDetector/data/splits",
+    "extra_train_roots": [],
+    "epochs_max": 15,
+    "init_checkpoint": null,
+    "batch_size": 16,
+    "lr": 0.001,
+    "patience": 4,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "device": "cpu",
+    "grayscale": false,
+    "augment": true,
+    "hflip_prob": 0.5,
+    "brightness_jitter": 0.15,
+    "contrast_jitter": 0.15,
+    "noise_std": 0.02,
+    "variant": "rgb-wildfire_cnn_v2-aug"
+  },
+  "best_val_auc": 0.9757483957132155,
+  "best_epoch": 6,
+  "test": {
+    "accuracy": 0.9350282485875706,
+    "auc": 0.9750824037019512,
+    "confusion_matrix": [
+      [
+        366,
+        13
+      ],
+      [
+        33,
+        296
+      ]
+    ]
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4772180830877201,
+      "val_auc": 0.8939623440502947
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.36520108573284804,
+      "val_auc": 0.950983745398873
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.3253791006464584,
+      "val_auc": 0.957278738721131
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.30642536706199835,
+      "val_auc": 0.9677595361412424
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.3008801306725717,
+      "val_auc": 0.9342893905338936
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.28969290041748214,
+      "val_auc": 0.9757483957132155
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.2630245386275883,
+      "val_auc": 0.9716603146682302
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.25330570009628345,
+      "val_auc": 0.9742418319814977
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.2571762700692988,
+      "val_auc": 0.9587038665754584
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.24480090493007617,
+      "val_auc": 0.9749747548780091
+    }
+  ]
+}

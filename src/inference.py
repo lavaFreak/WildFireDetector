@@ -11,12 +11,32 @@ import numpy as np
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CHECKPOINTS = {
+    "cnn_64x64_rgb_aug_v2_chw_multifire20k_finetune": (
+        REPO_ROOT / "figures" / "cnn_64x64_rgb_aug_v2_chw_multifire20k_finetune" / "best_model.pt"
+    ),
+    "cnn_64x64_rgb_aug_v2_chw_multifire20k": (
+        REPO_ROOT / "figures" / "cnn_64x64_rgb_aug_v2_chw_multifire20k" / "best_model.pt"
+    ),
+    "cnn_64x64_rgb_aug_v2_chw": REPO_ROOT / "figures" / "cnn_64x64_rgb_aug_v2_chw" / "best_model.pt",
     "cnn_64x64_rgb_aug_v2": REPO_ROOT / "figures" / "cnn_64x64_rgb_aug_v2" / "best_model.pt",
+    "cnn_64x64_rgb_aug_v2_multifire20k_finetune": (
+        REPO_ROOT / "figures" / "cnn_64x64_rgb_aug_v2_multifire20k_finetune" / "best_model.pt"
+    ),
     "cnn_16x16": REPO_ROOT / "figures" / "cnn_16x16" / "best_model.pt",
     "cnn_64x64": REPO_ROOT / "figures" / "cnn_64x64" / "best_model.pt",
 }
-BEST_MODEL_NAME = "cnn_64x64_rgb_aug_v2"
+BEST_MODEL_NAME = "cnn_64x64_rgb_aug_v2_chw_multifire20k_finetune"
+DEFAULT_ENSEMBLE_MODELS = ("cnn_64x64_rgb_aug_v2_chw", BEST_MODEL_NAME)
 DEFAULT_THRESHOLD = 0.5
+DEFAULT_MODEL_SIZES = {
+    "cnn_16x16": 16,
+    "cnn_64x64": 64,
+    "cnn_64x64_rgb_aug_v2_chw_multifire20k_finetune": 64,
+    "cnn_64x64_rgb_aug_v2_chw_multifire20k": 64,
+    "cnn_64x64_rgb_aug_v2_chw": 64,
+    "cnn_64x64_rgb_aug_v2": 64,
+    "cnn_64x64_rgb_aug_v2_multifire20k_finetune": 64,
+}
 
 
 @dataclass
@@ -26,6 +46,7 @@ class LoadedClassifier:
     checkpoint_path: Path
     device: str
     grayscale: bool
+    rgb_tensor_layout: str
     architecture: str
     model: Any
 
@@ -65,7 +86,13 @@ def collect_image_paths(inputs: Iterable[str | Path]) -> list[Path]:
     return paths
 
 
-def preprocess_image(image_path: str | Path, size: int, *, grayscale: bool) -> np.ndarray:
+def preprocess_image(
+    image_path: str | Path,
+    size: int,
+    *,
+    grayscale: bool,
+    rgb_tensor_layout: str = "chw",
+) -> np.ndarray:
     if grayscale:
         img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
         if img is None:
@@ -80,8 +107,12 @@ def preprocess_image(image_path: str | Path, size: int, *, grayscale: bool) -> n
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)
     arr = img.astype(np.float32) / 255.0
-    arr = np.transpose(arr, (2, 0, 1))
-    return arr.reshape(1, 3, size, size)
+    if rgb_tensor_layout == "legacy_hwc_reshaped":
+        return arr.reshape(1, 3, size, size)
+    if rgb_tensor_layout == "chw":
+        arr = np.transpose(arr, (2, 0, 1))
+        return arr.reshape(1, 3, size, size)
+    raise ValueError(f"Unsupported RGB tensor layout: {rgb_tensor_layout}")
 
 
 def preprocess_grayscale_image(image_path: str | Path, size: int) -> np.ndarray:
@@ -192,11 +223,11 @@ def load_classifier(
     device: str = "auto",
 ) -> LoadedClassifier:
     torch, _ = _require_torch()
-    if model_name not in DEFAULT_CHECKPOINTS:
+    if checkpoint_path is None and model_name not in DEFAULT_CHECKPOINTS:
         supported = ", ".join(sorted(DEFAULT_CHECKPOINTS))
         raise ValueError(f"Unsupported model '{model_name}'. Supported models: {supported}")
 
-    default_size = 64 if model_name in {"cnn_64x64", "cnn_64x64_rgb_aug_v2"} else 16
+    default_size = DEFAULT_MODEL_SIZES.get(model_name, 64)
     ckpt_path = Path(checkpoint_path) if checkpoint_path is not None else DEFAULT_CHECKPOINTS[model_name]
     ckpt_path = ckpt_path.expanduser().resolve()
     if not ckpt_path.exists():
@@ -207,6 +238,7 @@ def load_classifier(
 
     architecture = "legacy"
     grayscale = True
+    rgb_tensor_layout = "chw"
     size = default_size
     state_dict = checkpoint_obj
 
@@ -214,6 +246,10 @@ def load_classifier(
         cfg = checkpoint_obj.get("config", {})
         architecture = str(checkpoint_obj.get("architecture", cfg.get("architecture", "wildfire_cnn_v2")))
         grayscale = bool(cfg.get("grayscale", True))
+        if grayscale:
+            rgb_tensor_layout = "chw"
+        else:
+            rgb_tensor_layout = str(cfg.get("rgb_tensor_layout", "legacy_hwc_reshaped"))
         size = int(cfg.get("size", default_size))
         state_dict = checkpoint_obj["model_state_dict"]
 
@@ -229,6 +265,7 @@ def load_classifier(
         checkpoint_path=ckpt_path,
         device=resolved_device,
         grayscale=grayscale,
+        rgb_tensor_layout=rgb_tensor_layout,
         architecture=architecture,
         model=model,
     )
@@ -245,7 +282,15 @@ def predict_with_classifier(
 
     resolved_paths = [Path(path).expanduser().resolve() for path in image_paths]
     batch_np = np.concatenate(
-        [preprocess_image(path, classifier.size, grayscale=classifier.grayscale) for path in resolved_paths],
+        [
+            preprocess_image(
+                path,
+                classifier.size,
+                grayscale=classifier.grayscale,
+                rgb_tensor_layout=classifier.rgb_tensor_layout,
+            )
+            for path in resolved_paths
+        ],
         axis=0,
     )
     batch = torch.from_numpy(batch_np).to(torch.device(classifier.device))
@@ -283,7 +328,7 @@ def predict_with_classifier(
 def ensemble_predict(
     image_paths: Iterable[str | Path],
     *,
-    model_names: Iterable[str] = ("cnn_16x16", "cnn_64x64"),
+    model_names: Iterable[str] = DEFAULT_ENSEMBLE_MODELS,
     threshold: float = DEFAULT_THRESHOLD,
     device: str = "auto",
     tta: bool = False,

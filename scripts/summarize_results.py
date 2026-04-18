@@ -82,11 +82,11 @@ def load_runs():
 
 def make_basic_table(rows):
     lines = []
-    lines.append("| Model | Variant | Resolution | Accuracy | AUC | FP | FN |")
-    lines.append("|-------|---------|------------|----------|-----|----|----|")
+    lines.append("| Model | Run | Variant | Resolution | Accuracy | AUC | FP | FN |")
+    lines.append("|-------|-----|---------|------------|----------|-----|----|----|")
     for r in rows:
         lines.append(
-            f"| {r['model']} | {r['variant']} | {r['resolution']} | "
+            f"| {r['model']} | {r['run']} | {r['variant']} | {r['resolution']} | "
             f"{r['accuracy']:.3f} | {r['auc']:.3f} | "
             f"{r['fp']} | {r['fn']} |"
         )
@@ -95,11 +95,11 @@ def make_basic_table(rows):
 
 def make_metrics_table(rows):
     lines = []
-    lines.append("| Model | Variant | Resolution | Precision | Recall | F1 | TP | TN | FP | FN |")
-    lines.append("|-------|---------|------------|-----------|--------|----|----|----|----|----|")
+    lines.append("| Model | Run | Variant | Resolution | Precision | Recall | F1 | TP | TN | FP | FN |")
+    lines.append("|-------|-----|---------|------------|-----------|--------|----|----|----|----|----|")
     for r in rows:
         lines.append(
-            f"| {r['model']} | {r['variant']} | {r['resolution']} | "
+            f"| {r['model']} | {r['run']} | {r['variant']} | {r['resolution']} | "
             f"{r['precision']:.3f} | {r['recall']:.3f} | {r['f1']:.3f} | "
             f"{r['tp']} | {r['tn']} | {r['fp']} | {r['fn']} |"
         )

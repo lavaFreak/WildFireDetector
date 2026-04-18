@@ -1,0 +1,84 @@
+{
+  "name": "rgb_aug_v2_legacy_eval",
+  "checkpoints": [
+    "/Users/garion/Work/WildFireDetector/figures/cnn_64x64_rgb_aug_v2/best_model.pt"
+  ],
+  "tta": false,
+  "splits_root": "/Users/garion/Desktop/WildFireDetector/data/splits",
+  "val": {
+    "default_threshold": {
+      "threshold": 0.5,
+      "accuracy": 0.9331436699857752,
+      "auc": 0.9816850711749568,
+      "precision": 0.9570957095709571,
+      "recall": 0.8950617283950617,
+      "f1": 0.9250398724082934,
+      "confusion_matrix": [
+        [
+          366,
+          13
+        ],
+        [
+          34,
+          290
+        ]
+      ]
+    },
+    "tuned_threshold": {
+      "threshold": 0.5225,
+      "accuracy": 0.9345661450924608,
+      "auc": 0.9816850711749568,
+      "precision": 0.9664429530201343,
+      "recall": 0.8888888888888888,
+      "f1": 0.9260450160771704,
+      "confusion_matrix": [
+        [
+          369,
+          10
+        ],
+        [
+          36,
+          288
+        ]
+      ]
+    }
+  },
+  "test": {
+    "default_threshold": {
+      "threshold": 0.5,
+      "accuracy": 0.9322033898305084,
+      "auc": 0.9785950870552004,
+      "precision": 0.9667774086378738,
+      "recall": 0.8844984802431611,
+      "f1": 0.9238095238095239,
+      "confusion_matrix": [
+        [
+          369,
+          10
+        ],
+        [
+          38,
+          291
+        ]
+      ]
+    },
+    "tuned_threshold": {
+      "threshold": 0.5225,
+      "accuracy": 0.9293785310734464,
+      "auc": 0.9785950870552004,
+      "precision": 0.9665551839464883,
+      "recall": 0.878419452887538,
+      "f1": 0.9203821656050956,
+      "confusion_matrix": [
+        [
+          369,
+          10
+        ],
+        [
+          40,
+          289
+        ]
+      ]
+    }
+  }
+}

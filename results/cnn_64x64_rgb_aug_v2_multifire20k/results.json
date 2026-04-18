@@ -1,0 +1,99 @@
+{
+  "config": {
+    "model": "CNN",
+    "architecture": "wildfire_cnn_v2",
+    "run_name": "cnn_64x64_rgb_aug_v2_multifire20k",
+    "size": 64,
+    "splits_root": "/Users/garion/Desktop/WildFireDetector/data/splits",
+    "extra_train_roots": [
+      "/Users/garion/Work/WildFireDetector/.local_data/multifire20k/canonical"
+    ],
+    "epochs_max": 15,
+    "batch_size": 32,
+    "lr": 0.001,
+    "patience": 4,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "device": "cpu",
+    "grayscale": false,
+    "augment": true,
+    "hflip_prob": 0.5,
+    "brightness_jitter": 0.15,
+    "contrast_jitter": 0.15,
+    "noise_std": 0.02,
+    "variant": "rgb-wildfire_cnn_v2-aug"
+  },
+  "best_val_auc": 0.9522622886738982,
+  "best_epoch": 7,
+  "test": {
+    "accuracy": 0.844632768361582,
+    "auc": 0.9575109671106976,
+    "confusion_matrix": [
+      [
+        281,
+        98
+      ],
+      [
+        12,
+        317
+      ]
+    ]
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.39584152222660834,
+      "val_auc": 0.8104172774357471
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.3219999761278492,
+      "val_auc": 0.8647920127691455
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.28746921477126486,
+      "val_auc": 0.9144108928629597
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.2694531618751616,
+      "val_auc": 0.8966741587673865
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.25141220168812284,
+      "val_auc": 0.9138978468354019
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.24263769412727512,
+      "val_auc": 0.875867292094205
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.22658273471910276,
+      "val_auc": 0.9522622886738982
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.21722966653712614,
+      "val_auc": 0.9505765660119222
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.21654819970022995,
+      "val_auc": 0.9209501938173882
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.21152731235840438,
+      "val_auc": 0.9375875435681944
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.2012607102960716,
+      "val_auc": 0.9253233004332387
+    }
+  ]
+}

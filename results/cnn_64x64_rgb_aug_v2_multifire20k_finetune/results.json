@@ -1,0 +1,78 @@
+{
+  "config": {
+    "model": "CNN",
+    "architecture": "wildfire_cnn_v2",
+    "run_name": "cnn_64x64_rgb_aug_v2_multifire20k_finetune",
+    "size": 64,
+    "splits_root": "/Users/garion/Desktop/WildFireDetector/data/splits",
+    "extra_train_roots": [],
+    "epochs_max": 8,
+    "init_checkpoint": "/Users/garion/Work/WildFireDetector/figures/cnn_64x64_rgb_aug_v2_multifire20k/best_model.pt",
+    "batch_size": 32,
+    "lr": 0.0003,
+    "patience": 3,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "device": "cpu",
+    "grayscale": false,
+    "augment": true,
+    "hflip_prob": 0.5,
+    "brightness_jitter": 0.15,
+    "contrast_jitter": 0.15,
+    "noise_std": 0.02,
+    "variant": "rgb-wildfire_cnn_v2-aug"
+  },
+  "best_val_auc": 0.9852601061923841,
+  "best_epoch": 4,
+  "test": {
+    "accuracy": 0.9265536723163842,
+    "auc": 0.9824446030587611,
+    "confusion_matrix": [
+      [
+        366,
+        13
+      ],
+      [
+        39,
+        290
+      ]
+    ]
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.24837209916144026,
+      "val_auc": 0.9748118831232288
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.20836204966055413,
+      "val_auc": 0.9820433890354735
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.20809792413138875,
+      "val_auc": 0.9847552037525652
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.19338604227146683,
+      "val_auc": 0.9852601061923841
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.1984204520635745,
+      "val_auc": 0.9843073064269194
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.1850681835055059,
+      "val_auc": 0.9838838398644907
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.19093510979676948,
+      "val_auc": 0.9839082706277077
+    }
+  ]
+}

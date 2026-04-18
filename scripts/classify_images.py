@@ -19,9 +19,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("inputs", nargs="+", help="Image files and/or directories to classify")
     parser.add_argument(
         "--model",
-        choices=[BEST_MODEL_NAME, "cnn_64x64", "cnn_16x16", "ensemble"],
+        choices=[
+            BEST_MODEL_NAME,
+            "cnn_64x64_rgb_aug_v2_chw",
+            "cnn_64x64_rgb_aug_v2_chw_multifire20k",
+            "cnn_64x64_rgb_aug_v2_multifire20k_finetune",
+            "cnn_64x64_rgb_aug_v2",
+            "cnn_64x64",
+            "cnn_16x16",
+            "ensemble",
+        ],
         default=BEST_MODEL_NAME,
-        help="Classifier to run. 'ensemble' averages the legacy CNN checkpoints.",
+        help="Classifier to run. 'ensemble' averages the corrected in-domain RGB checkpoint with the new corrected outside-data fine-tuned checkpoint.",
     )
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Fire classification threshold")
     parser.add_argument("--device", default="auto", help="auto | cpu | mps | cuda")

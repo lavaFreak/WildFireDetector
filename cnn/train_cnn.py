@@ -146,6 +146,16 @@ def save_checkpoint(
     torch.save(payload, checkpoint_path)
 
 
+def load_checkpoint_for_training(checkpoint_path: Path, model: nn.Module) -> dict | None:
+    payload = torch.load(checkpoint_path, map_location="cpu")
+    if isinstance(payload, dict) and "model_state_dict" in payload:
+        model.load_state_dict(payload["model_state_dict"])
+        return payload
+
+    model.load_state_dict(payload)
+    return None
+
+
 @torch.no_grad()
 def eval_auc_and_cm(model: nn.Module, loader: DataLoader, device: torch.device):
     model.eval()
@@ -240,7 +250,20 @@ def main() -> None:
         default=Path("data/splits"),
         help="Path to the canonical train/val/test split directory",
     )
+    parser.add_argument(
+        "--extra-train-root",
+        action="append",
+        default=[],
+        type=Path,
+        help="Additional canonical split roots whose train split should be merged into training only",
+    )
     parser.add_argument("--epochs", type=int, default=25)
+    parser.add_argument(
+        "--init-checkpoint",
+        type=Path,
+        default=None,
+        help="Optional checkpoint to load before training (legacy or metadata format)",
+    )
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--patience", type=int, default=5, help="Early stopping patience (epochs)")
@@ -289,7 +312,12 @@ def main() -> None:
 
     device = get_device(args.device)
 
-    ds = load_splits(splits_root=args.splits_root, size=size, grayscale=grayscale)
+    ds = load_splits(
+        splits_root=args.splits_root,
+        extra_train_roots=args.extra_train_root,
+        size=size,
+        grayscale=grayscale,
+    )
 
     # ds.X_* is (N, size*size) if grayscale; if rgb, typically (N, size*size*3)
     def to_image_tensor(X: np.ndarray) -> torch.Tensor:
@@ -297,7 +325,8 @@ def main() -> None:
         if grayscale:
             X = X.reshape(-1, 1, size, size)
         else:
-            X = X.reshape(-1, 3, size, size)
+            X = X.reshape(-1, size, size, 3)
+            X = np.transpose(X, (0, 3, 1, 2))
         return torch.from_numpy(X)
 
     X_train = to_image_tensor(ds.X_train)
@@ -314,6 +343,8 @@ def main() -> None:
     test_loader = DataLoader(TensorDataset(X_test, y_test), batch_size=args.batch_size, shuffle=False)
 
     model = build_model(args.arch, in_ch=in_ch, size=size).to(device)
+    if args.init_checkpoint is not None:
+        load_checkpoint_for_training(args.init_checkpoint, model)
     opt = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     loss_fn = nn.BCEWithLogitsLoss()
 
@@ -378,7 +409,9 @@ def main() -> None:
             "run_name": run_name,
             "size": size,
             "splits_root": str(args.splits_root),
+            "extra_train_roots": [str(path) for path in args.extra_train_root],
             "epochs_max": args.epochs,
+            "init_checkpoint": str(args.init_checkpoint) if args.init_checkpoint is not None else None,
             "batch_size": args.batch_size,
             "lr": args.lr,
             "patience": args.patience,
@@ -386,6 +419,7 @@ def main() -> None:
             "seed": args.seed,
             "device": str(device),
             "grayscale": grayscale,
+            "rgb_tensor_layout": "chw",
             "augment": bool(args.augment),
             "hflip_prob": args.hflip_prob,
             "brightness_jitter": args.brightness_jitter,
