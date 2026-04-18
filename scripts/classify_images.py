@@ -4,7 +4,14 @@ import argparse
 import csv
 from pathlib import Path
 
-from src.inference import DEFAULT_THRESHOLD, collect_image_paths, ensemble_predict, load_classifier, predict_with_classifier
+from src.inference import (
+    BEST_MODEL_NAME,
+    DEFAULT_THRESHOLD,
+    collect_image_paths,
+    ensemble_predict,
+    load_classifier,
+    predict_with_classifier,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -12,9 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("inputs", nargs="+", help="Image files and/or directories to classify")
     parser.add_argument(
         "--model",
-        choices=["cnn_16x16", "cnn_64x64", "ensemble"],
-        default="cnn_64x64",
-        help="Classifier to run. 'ensemble' averages the 16x16 and 64x64 CNN checkpoints.",
+        choices=[BEST_MODEL_NAME, "cnn_64x64", "cnn_16x16", "ensemble"],
+        default=BEST_MODEL_NAME,
+        help="Classifier to run. 'ensemble' averages the legacy CNN checkpoints.",
     )
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Fire classification threshold")
     parser.add_argument("--device", default="auto", help="auto | cpu | mps | cuda")

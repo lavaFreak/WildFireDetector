@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 
 from sklearn.metrics import roc_auc_score, confusion_matrix, roc_curve, accuracy_score
@@ -54,6 +56,94 @@ class SmallCNN(nn.Module):
         z = self.net(x)
         z = z.view(z.size(0), -1)
         return self.head(z).squeeze(1)  # logits
+
+
+class WildfireCNNv2(nn.Module):
+    def __init__(self, in_ch: int):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(in_ch, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool2d((1, 1)),
+        )
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(0.3),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, 1),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        z = self.features(x)
+        return self.classifier(z).squeeze(1)
+
+
+def build_model(arch: str, in_ch: int, size: int) -> nn.Module:
+    if arch == "legacy":
+        return SmallCNN(in_ch=in_ch, size=size)
+    if arch == "wildfire_cnn_v2":
+        return WildfireCNNv2(in_ch=in_ch)
+    raise ValueError(f"Unsupported architecture: {arch}")
+
+
+def apply_train_augmentations(
+    xb: torch.Tensor,
+    *,
+    hflip_prob: float,
+    brightness_jitter: float,
+    contrast_jitter: float,
+    noise_std: float,
+) -> torch.Tensor:
+    x = xb.clone()
+
+    if hflip_prob > 0:
+        flip_mask = torch.rand(x.size(0), device=x.device) < hflip_prob
+        if bool(flip_mask.any()):
+            x[flip_mask] = torch.flip(x[flip_mask], dims=(3,))
+
+    if brightness_jitter > 0:
+        brightness = 1.0 + (torch.rand(x.size(0), 1, 1, 1, device=x.device) * 2 - 1) * brightness_jitter
+        x = x * brightness
+
+    if contrast_jitter > 0:
+        means = x.mean(dim=(2, 3), keepdim=True)
+        contrast = 1.0 + (torch.rand(x.size(0), 1, 1, 1, device=x.device) * 2 - 1) * contrast_jitter
+        x = (x - means) * contrast + means
+
+    if noise_std > 0:
+        x = x + torch.randn_like(x) * noise_std
+
+    return x.clamp(0.0, 1.0)
+
+
+def save_checkpoint(
+    checkpoint_path: Path,
+    *,
+    model: nn.Module,
+    config: dict,
+    best_val_auc: float,
+    best_epoch: int,
+) -> None:
+    payload = {
+        "format_version": 2,
+        "architecture": config["architecture"],
+        "config": config,
+        "best_val_auc": float(best_val_auc),
+        "best_epoch": int(best_epoch),
+        "model_state_dict": model.state_dict(),
+    }
+    torch.save(payload, checkpoint_path)
 
 
 @torch.no_grad()
@@ -138,31 +228,68 @@ def save_history_plots(history: list[dict], fig_dir: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--size", type=int, default=16, help="Image downsample size for CNN (e.g., 16, 64)")
+    parser.add_argument(
+        "--run-name",
+        type=str,
+        default="",
+        help="Optional output directory suffix for preserving multiple experiments at the same resolution",
+    )
+    parser.add_argument(
+        "--splits-root",
+        type=Path,
+        default=Path("data/splits"),
+        help="Path to the canonical train/val/test split directory",
+    )
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--patience", type=int, default=5, help="Early stopping patience (epochs)")
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--arch",
+        choices=["legacy", "wildfire_cnn_v2"],
+        default="wildfire_cnn_v2",
+        help="CNN architecture to train",
+    )
     parser.add_argument("--rgb", action="store_true", help="Use RGB images (3-channel) instead of grayscale")
     parser.add_argument("--device", type=str, default="auto", help="auto | cpu | mps | cuda")
+    parser.add_argument("--skip-figures", action="store_true", help="Skip saving plots and only write JSON results")
+    parser.add_argument("--augment", action="store_true", help="Enable lightweight training-time augmentation")
+    parser.add_argument("--hflip-prob", type=float, default=0.5, help="Horizontal flip probability when augmenting")
+    parser.add_argument(
+        "--brightness-jitter",
+        type=float,
+        default=0.15,
+        help="Brightness jitter strength when augmenting",
+    )
+    parser.add_argument(
+        "--contrast-jitter",
+        type=float,
+        default=0.15,
+        help="Contrast jitter strength when augmenting",
+    )
+    parser.add_argument("--noise-std", type=float, default=0.02, help="Gaussian noise std when augmenting")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    random.seed(args.seed)
 
     size = args.size
     grayscale = not args.rgb
     in_ch = 1 if grayscale else 3
+    base_run_name = f"cnn_{size}x{size}"
+    run_name = f"{base_run_name}_{args.run_name}" if args.run_name else base_run_name
 
-    fig_dir = Path("figures") / f"cnn_{size}x{size}"
-    res_dir = Path("results") / f"cnn_{size}x{size}"
+    fig_dir = Path("figures") / run_name
+    res_dir = Path("results") / run_name
     ensure_dir(fig_dir)
     ensure_dir(res_dir)
 
     device = get_device(args.device)
 
-    ds = load_splits(size=size, grayscale=grayscale)
+    ds = load_splits(splits_root=args.splits_root, size=size, grayscale=grayscale)
 
     # ds.X_* is (N, size*size) if grayscale; if rgb, typically (N, size*size*3)
     def to_image_tensor(X: np.ndarray) -> torch.Tensor:
@@ -186,12 +313,13 @@ def main() -> None:
     val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=args.batch_size, shuffle=False)
     test_loader = DataLoader(TensorDataset(X_test, y_test), batch_size=args.batch_size, shuffle=False)
 
-    model = SmallCNN(in_ch=in_ch, size=size).to(device)
+    model = build_model(args.arch, in_ch=in_ch, size=size).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     loss_fn = nn.BCEWithLogitsLoss()
 
     best_val_auc = -1.0
     best_state = None
+    best_epoch = 0
     bad_epochs = 0
     history: list[dict] = []
 
@@ -202,6 +330,14 @@ def main() -> None:
         for xb, yb in train_loader:
             xb = xb.to(device)
             yb = yb.to(device)
+            if args.augment:
+                xb = apply_train_augmentations(
+                    xb,
+                    hflip_prob=args.hflip_prob,
+                    brightness_jitter=args.brightness_jitter,
+                    contrast_jitter=args.contrast_jitter,
+                    noise_std=args.noise_std,
+                )
 
             opt.zero_grad()
             logits = model(xb)
@@ -221,6 +357,7 @@ def main() -> None:
         if val_auc > best_val_auc + 1e-6:
             best_val_auc = val_auc
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best_epoch = epoch
             bad_epochs = 0
         else:
             bad_epochs += 1
@@ -234,15 +371,13 @@ def main() -> None:
     # Final eval
     test_auc, test_acc, test_cm, y_true, y_prob = eval_auc_and_cm(model, test_loader, device)
 
-    # Save figures
-    save_history_plots(history, fig_dir)
-    save_confusion_matrix(test_cm, fig_dir / "test_confusion_matrix.png", "TEST Confusion Matrix")
-    save_roc_curve(y_true, y_prob, fig_dir / "test_roc.png", "TEST ROC Curve")
-
     results = {
         "config": {
             "model": "CNN",
+            "architecture": args.arch,
+            "run_name": run_name,
             "size": size,
+            "splits_root": str(args.splits_root),
             "epochs_max": args.epochs,
             "batch_size": args.batch_size,
             "lr": args.lr,
@@ -251,8 +386,19 @@ def main() -> None:
             "seed": args.seed,
             "device": str(device),
             "grayscale": grayscale,
+            "augment": bool(args.augment),
+            "hflip_prob": args.hflip_prob,
+            "brightness_jitter": args.brightness_jitter,
+            "contrast_jitter": args.contrast_jitter,
+            "noise_std": args.noise_std,
+            "variant": (
+                f"{'rgb' if args.rgb else 'gray'}-"
+                f"{args.arch}-"
+                f"{'aug' if args.augment else 'plain'}"
+            ),
         },
         "best_val_auc": float(best_val_auc),
+        "best_epoch": int(best_epoch),
         "test": {
             "accuracy": float(test_acc),
             "auc": float(test_auc),
@@ -261,11 +407,24 @@ def main() -> None:
         "history": history,
     }
 
+    save_checkpoint(
+        fig_dir / "best_model.pt",
+        model=model,
+        config=results["config"],
+        best_val_auc=best_val_auc,
+        best_epoch=best_epoch,
+    )
+
     json_text = json.dumps(results, indent=2)
 
     # Save JSON to BOTH locations
     (fig_dir / "results.json").write_text(json_text)
     (res_dir / "results.json").write_text(json_text)
+
+    if not args.skip_figures:
+        save_history_plots(history, fig_dir)
+        save_confusion_matrix(test_cm, fig_dir / "test_confusion_matrix.png", "TEST Confusion Matrix")
+        save_roc_curve(y_true, y_prob, fig_dir / "test_roc.png", "TEST ROC Curve")
 
     print("\nSaved figures to:", fig_dir)
     print("Saved results to:", res_dir)
@@ -274,4 +433,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

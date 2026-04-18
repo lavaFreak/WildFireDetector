@@ -11,7 +11,14 @@ except ModuleNotFoundError:
     messagebox = None
     ttk = None
 
-from src.inference import DEFAULT_THRESHOLD, collect_image_paths, ensemble_predict, load_classifier, predict_with_classifier
+from src.inference import (
+    BEST_MODEL_NAME,
+    DEFAULT_THRESHOLD,
+    collect_image_paths,
+    ensemble_predict,
+    load_classifier,
+    predict_with_classifier,
+)
 
 
 class WildfireClassifierApp:
@@ -29,13 +36,13 @@ class WildfireClassifierApp:
         ttk.Button(controls, text="Choose Folder", command=self.choose_folder).grid(row=0, column=1, padx=6, pady=6)
 
         ttk.Label(controls, text="Model").grid(row=0, column=2, padx=(18, 6), pady=6)
-        self.model_var = tk.StringVar(value="ensemble")
+        self.model_var = tk.StringVar(value=BEST_MODEL_NAME)
         ttk.Combobox(
             controls,
             textvariable=self.model_var,
-            values=("ensemble", "cnn_64x64", "cnn_16x16"),
+            values=(BEST_MODEL_NAME, "ensemble", "cnn_64x64", "cnn_16x16"),
             state="readonly",
-            width=14,
+            width=22,
         ).grid(row=0, column=3, padx=6, pady=6)
 
         ttk.Label(controls, text="Threshold").grid(row=0, column=4, padx=(18, 6), pady=6)

@@ -28,13 +28,18 @@ This repository is intended as a public-facing adaptation, not a mirror of inter
 
 ## Results Snapshot
 
-The strongest run in the current project copy is the `64x64` CNN:
+The strongest run in the current project copy is the `64x64 RGB + augmentation + wildfire_cnn_v2` experiment:
 
-| Model | Resolution | Accuracy | AUC | Precision | Recall | F1 |
-|-------|------------|----------|-----|-----------|--------|----|
-| CNN | 64x64 | 0.879 | 0.942 | 0.874 | 0.863 | 0.869 |
+| Model | Variant | Resolution | Accuracy | AUC | Precision | Recall | F1 |
+|-------|---------|------------|----------|-----|-----------|--------|----|
+| CNN | `rgb-wildfire_cnn_v2-aug` | 64x64 | 0.932 | 0.979 | 0.967 | 0.884 | 0.924 |
 
 Additional results are summarized in [results/summary_table.md](results/summary_table.md) and [results/summary_metrics.md](results/summary_metrics.md).
+
+Recent experiment note:
+
+- `256x256` grayscale did not outperform the current `64x64` baseline, so larger input size alone is not the main improvement path for this project.
+- `64x64 RGB + augmentation + wildfire_cnn_v2` did outperform the original grayscale baseline substantially, which makes RGB training and augmentation the new default direction.
 
 ## Why Include Logistic Regression?
 
@@ -64,7 +69,7 @@ The repository now includes two ways to classify arbitrary images with the saved
 1. Batch CLI for one image, many images, or entire folders:
 
 ```bash
-PYTHONPATH=. python scripts/classify_images.py path/to/image_or_folder --model ensemble --tta
+PYTHONPATH=. python scripts/classify_images.py path/to/image_or_folder --model cnn_64x64_rgb_aug_v2 --tta
 ```
 
 2. Local desktop app with file/folder selection:
@@ -73,7 +78,7 @@ PYTHONPATH=. python scripts/classify_images.py path/to/image_or_folder --model e
 PYTHONPATH=. python app/classifier_app.py
 ```
 
-The `ensemble` option averages the `16x16` and `64x64` CNN checkpoints, which is a simple way to make predictions a bit more robust than relying on a single saved model alone.
+The default classifier is the stronger `cnn_64x64_rgb_aug_v2` checkpoint. The `ensemble` option still averages the older legacy CNN checkpoints if you want a comparison path.
 
 ## Repository Layout
 
@@ -115,6 +120,12 @@ python -m src.train_logreg --size 16
 python cnn/train_cnn.py --size 64 --epochs 25
 ```
 
+Recommended stronger run:
+
+```bash
+python cnn/train_cnn.py --size 64 --rgb --augment --arch wildfire_cnn_v2 --run-name rgb_aug_v2 --epochs 25
+```
+
 4. Regenerate the summary tables:
 
 ```bash
@@ -130,6 +141,10 @@ PYTHONPATH=. python -m pytest tests
 ```
 
 The new inference utilities are also covered with lightweight tests for file discovery and preprocessing behavior.
+
+## Training Roadmap
+
+The concrete next-step plan for augmentation, RGB experiments, and outside-dataset expansion is documented in [report/TRAINING_PLAN.md](report/TRAINING_PLAN.md).
 
 ## Data Note
 

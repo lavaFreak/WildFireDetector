@@ -31,6 +31,7 @@
 - `figures/` — plots for report (ROC curves, confusion matrices, weight heatmaps)
 - `results/` — per-run `results.json` files plus aggregate summary tables
 - `report/` — narrative write-up and project summary
+  - `TRAINING_PLAN.md` — roadmap for stronger experiments and outside-dataset integration
 
 ## Tests
 - `tests/test_data_utils.py` — synthetic tests for preprocessing and split loading

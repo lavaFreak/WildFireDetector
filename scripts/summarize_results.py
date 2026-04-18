@@ -34,6 +34,7 @@ def load_runs():
         cfg = res.get("config", {})
         model = cfg.get("model", "UNKNOWN")
         size = cfg.get("size", None)
+        variant = cfg.get("variant", run_dir.name)
 
         test = res.get("test", {})
         cm = test.get("confusion_matrix", None)
@@ -62,6 +63,7 @@ def load_runs():
             {
                 "run": run_dir.name,
                 "model": model,
+                "variant": variant,
                 "resolution": resolution,
                 "accuracy": accuracy,
                 "auc": auc,
@@ -80,11 +82,11 @@ def load_runs():
 
 def make_basic_table(rows):
     lines = []
-    lines.append("| Model | Resolution | Accuracy | AUC | FP | FN |")
-    lines.append("|-------|------------|----------|-----|----|----|")
+    lines.append("| Model | Variant | Resolution | Accuracy | AUC | FP | FN |")
+    lines.append("|-------|---------|------------|----------|-----|----|----|")
     for r in rows:
         lines.append(
-            f"| {r['model']} | {r['resolution']} | "
+            f"| {r['model']} | {r['variant']} | {r['resolution']} | "
             f"{r['accuracy']:.3f} | {r['auc']:.3f} | "
             f"{r['fp']} | {r['fn']} |"
         )
@@ -93,11 +95,11 @@ def make_basic_table(rows):
 
 def make_metrics_table(rows):
     lines = []
-    lines.append("| Model | Resolution | Precision | Recall | F1 | TP | TN | FP | FN |")
-    lines.append("|-------|------------|-----------|--------|----|----|----|----|----|")
+    lines.append("| Model | Variant | Resolution | Precision | Recall | F1 | TP | TN | FP | FN |")
+    lines.append("|-------|---------|------------|-----------|--------|----|----|----|----|----|")
     for r in rows:
         lines.append(
-            f"| {r['model']} | {r['resolution']} | "
+            f"| {r['model']} | {r['variant']} | {r['resolution']} | "
             f"{r['precision']:.3f} | {r['recall']:.3f} | {r['f1']:.3f} | "
             f"{r['tp']} | {r['tn']} | {r['fp']} | {r['fn']} |"
         )
@@ -119,7 +121,7 @@ def main():
         except Exception:
             return 0
 
-    rows = sorted(rows, key=lambda r: (r["model"], size_key(r["resolution"])))
+    rows = sorted(rows, key=lambda r: (r["model"], size_key(r["resolution"]), r["variant"]))
 
     basic = make_basic_table(rows)
     metrics = make_metrics_table(rows)
@@ -138,4 +140,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

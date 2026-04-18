@@ -11,9 +11,11 @@ import numpy as np
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CHECKPOINTS = {
+    "cnn_64x64_rgb_aug_v2": REPO_ROOT / "figures" / "cnn_64x64_rgb_aug_v2" / "best_model.pt",
     "cnn_16x16": REPO_ROOT / "figures" / "cnn_16x16" / "best_model.pt",
     "cnn_64x64": REPO_ROOT / "figures" / "cnn_64x64" / "best_model.pt",
 }
+BEST_MODEL_NAME = "cnn_64x64_rgb_aug_v2"
 DEFAULT_THRESHOLD = 0.5
 
 
@@ -23,6 +25,8 @@ class LoadedClassifier:
     size: int
     checkpoint_path: Path
     device: str
+    grayscale: bool
+    architecture: str
     model: Any
 
 
@@ -61,14 +65,27 @@ def collect_image_paths(inputs: Iterable[str | Path]) -> list[Path]:
     return paths
 
 
-def preprocess_grayscale_image(image_path: str | Path, size: int) -> np.ndarray:
-    img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
+def preprocess_image(image_path: str | Path, size: int, *, grayscale: bool) -> np.ndarray:
+    if grayscale:
+        img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise ValueError(f"Failed to read image: {image_path}")
+        img = cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)
+        arr = img.astype(np.float32) / 255.0
+        return arr.reshape(1, 1, size, size)
+
+    img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError(f"Failed to read image: {image_path}")
-
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)
     arr = img.astype(np.float32) / 255.0
-    return arr.reshape(1, 1, size, size)
+    arr = np.transpose(arr, (2, 0, 1))
+    return arr.reshape(1, 3, size, size)
+
+
+def preprocess_grayscale_image(image_path: str | Path, size: int) -> np.ndarray:
+    return preprocess_image(image_path, size, grayscale=True)
 
 
 def _require_torch() -> tuple[Any, Any]:
@@ -124,8 +141,52 @@ def _build_legacy_cnn(size: int) -> Any:
     return LegacyWildfireCNN()
 
 
+def _build_wildfire_cnn_v2(in_ch: int) -> Any:
+    _, nn = _require_torch()
+
+    class WildfireCNNv2(nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.features = nn.Sequential(
+                nn.Conv2d(in_ch, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+                nn.Conv2d(32, 64, kernel_size=3, padding=1),
+                nn.BatchNorm2d(64),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+                nn.Conv2d(64, 128, kernel_size=3, padding=1),
+                nn.BatchNorm2d(128),
+                nn.ReLU(),
+                nn.AdaptiveAvgPool2d((1, 1)),
+            )
+            self.classifier = nn.Sequential(
+                nn.Flatten(),
+                nn.Dropout(0.3),
+                nn.Linear(128, 64),
+                nn.ReLU(),
+                nn.Dropout(0.2),
+                nn.Linear(64, 1),
+            )
+
+        def forward(self, x: Any) -> Any:
+            z = self.features(x)
+            return self.classifier(z).squeeze(1)
+
+    return WildfireCNNv2()
+
+
+def _build_model(architecture: str, *, in_ch: int, size: int) -> Any:
+    if architecture == "legacy":
+        return _build_legacy_cnn(size)
+    if architecture == "wildfire_cnn_v2":
+        return _build_wildfire_cnn_v2(in_ch)
+    raise ValueError(f"Unsupported checkpoint architecture: {architecture}")
+
+
 def load_classifier(
-    model_name: str = "cnn_64x64",
+    model_name: str = BEST_MODEL_NAME,
     *,
     checkpoint_path: str | Path | None = None,
     device: str = "auto",
@@ -135,15 +196,29 @@ def load_classifier(
         supported = ", ".join(sorted(DEFAULT_CHECKPOINTS))
         raise ValueError(f"Unsupported model '{model_name}'. Supported models: {supported}")
 
-    size = 64 if model_name == "cnn_64x64" else 16
+    default_size = 64 if model_name in {"cnn_64x64", "cnn_64x64_rgb_aug_v2"} else 16
     ckpt_path = Path(checkpoint_path) if checkpoint_path is not None else DEFAULT_CHECKPOINTS[model_name]
     ckpt_path = ckpt_path.expanduser().resolve()
     if not ckpt_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
 
     resolved_device = _resolve_device(device, torch)
-    model = _build_legacy_cnn(size)
-    state_dict = torch.load(ckpt_path, map_location="cpu")
+    checkpoint_obj = torch.load(ckpt_path, map_location="cpu")
+
+    architecture = "legacy"
+    grayscale = True
+    size = default_size
+    state_dict = checkpoint_obj
+
+    if isinstance(checkpoint_obj, dict) and "model_state_dict" in checkpoint_obj:
+        cfg = checkpoint_obj.get("config", {})
+        architecture = str(checkpoint_obj.get("architecture", cfg.get("architecture", "wildfire_cnn_v2")))
+        grayscale = bool(cfg.get("grayscale", True))
+        size = int(cfg.get("size", default_size))
+        state_dict = checkpoint_obj["model_state_dict"]
+
+    in_ch = 1 if grayscale else 3
+    model = _build_model(architecture, in_ch=in_ch, size=size)
     model.load_state_dict(state_dict)
     model.eval()
     model.to(torch.device(resolved_device))
@@ -153,6 +228,8 @@ def load_classifier(
         size=size,
         checkpoint_path=ckpt_path,
         device=resolved_device,
+        grayscale=grayscale,
+        architecture=architecture,
         model=model,
     )
 
@@ -168,7 +245,7 @@ def predict_with_classifier(
 
     resolved_paths = [Path(path).expanduser().resolve() for path in image_paths]
     batch_np = np.concatenate(
-        [preprocess_grayscale_image(path, classifier.size) for path in resolved_paths],
+        [preprocess_image(path, classifier.size, grayscale=classifier.grayscale) for path in resolved_paths],
         axis=0,
     )
     batch = torch.from_numpy(batch_np).to(torch.device(classifier.device))
