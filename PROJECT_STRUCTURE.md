@@ -16,9 +16,12 @@
   - `SPLIT_INFO.json` — split ratios, seed, counts, and file lists (reproducibility)
 
 ## Code
+- `app/classifier_app.py` — local desktop UI for choosing one image or a folder and running classification
 - `scripts/prepare_dataset.py` — builds `data/splits/` from `data/raw/`
+- `scripts/classify_images.py` — CLI for single-image or batch-image prediction
 - `scripts/summarize_results.py` — aggregates run outputs into Markdown summary tables
 - `src/data_utils.py` — loads splits + builds flattened feature matrices
+- `src/inference.py` — checkpoint loading, preprocessing, and batch prediction helpers
 - `src/train_logreg.py` — trains logistic regression + saves metrics/plots
 
 ## Optional CNN
@@ -31,3 +34,4 @@
 
 ## Tests
 - `tests/test_data_utils.py` — synthetic tests for preprocessing and split loading
+- `tests/test_inference_utils.py` — synthetic tests for image discovery and inference preprocessing

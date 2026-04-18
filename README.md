@@ -57,6 +57,24 @@ In the current results, the CNN outperforms the logistic-regression baselines cl
 
 ![CNN confusion matrix](figures/cnn_64x64/test_confusion_matrix.png)
 
+## Interactive Classification
+
+The repository now includes two ways to classify arbitrary images with the saved CNN checkpoints:
+
+1. Batch CLI for one image, many images, or entire folders:
+
+```bash
+PYTHONPATH=. python scripts/classify_images.py path/to/image_or_folder --model ensemble --tta
+```
+
+2. Local desktop app with file/folder selection:
+
+```bash
+PYTHONPATH=. python app/classifier_app.py
+```
+
+The `ensemble` option averages the `16x16` and `64x64` CNN checkpoints, which is a simple way to make predictions a bit more robust than relying on a single saved model alone.
+
 ## Repository Layout
 
 - `scripts/prepare_dataset.py`: builds canonical `train/`, `val/`, and `test/` splits from raw images
@@ -110,6 +128,8 @@ The included tests use temporary synthetic image data, so they can run without t
 ```bash
 PYTHONPATH=. python -m pytest tests
 ```
+
+The new inference utilities are also covered with lightweight tests for file discovery and preprocessing behavior.
 
 ## Data Note
 
