@@ -7,8 +7,8 @@
 - `PROJECT_STRUCTURE.md` — quick orientation for repository layout
 
 ## Data
-- `data/README.md` — expected data layout for the public-facing repo copy
-- `data/raw/` — unmodified dataset after extraction (not committed in the public repo)
+- `data/README.md` — expected data layout
+- `data/raw/` — unmodified dataset after extraction (not committed here)
 - `data/splits/` — canonical train/val/test structure created by scripts
   - `train/fire/`, `train/no_fire/`
   - `val/fire/`, `val/no_fire/`
@@ -35,9 +35,8 @@
   - `evaluations/` — saved single-model / ensemble evaluation JSON reports
 - `report/` — narrative write-up and project summary
   - `EXPERIMENT_LOG.md` — record of completed training runs and observed outcomes
-  - `INTERVIEW_RESUME_GUIDE.md` — resume bullets, interview framing, and likely discussion prompts
   - `MODEL_CARD.md` — intended use, metrics, and limitations for the strongest checkpoint
-  - `PROJECT_BRIEF.md` — concise high-level project overview for portfolio/interview use
+  - `PROJECT_BRIEF.md` — concise high-level project overview
   - `TRAINING_PLAN.md` — roadmap for stronger experiments and outside-dataset integration
 
 ## Tests

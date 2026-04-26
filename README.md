@@ -10,14 +10,13 @@ The project is structured around a reproducible workflow:
 
 ## Project Background
 
-This public repository is a cleaned-up adaptation of earlier wildfire-detection work I contributed to during an internship with Other Orb LLC, followed by a class-project extension where I added a logistic-regression baseline and a more explicit comparison pipeline.
+This repository is a cleaned-up adaptation of earlier wildfire-detection work I contributed to during an internship with Other Orb LLC, followed by a class-project extension where I added a logistic-regression baseline and a more explicit comparison pipeline.
 
-The goal of this version is to present the project in a way that is reproducible and interview-friendly:
+The goal of this version is to keep the project reproducible and the modeling comparison explicit:
 - preserve the core wildfire-classification problem
 - show the difference between a simple baseline and a stronger CNN approach
-- package the work as a standalone public project rather than an internal or classroom-only artifact
 
-This repository is intended as a public-facing adaptation, not a mirror of internship code. It does not include proprietary code, private datasets, or internal company materials.
+This repository is not a mirror of internship code. It does not include proprietary code, private datasets, or internal company materials.
 
 ## Highlights
 
@@ -31,7 +30,6 @@ This repository is intended as a public-facing adaptation, not a mirror of inter
 - [Project Brief](report/PROJECT_BRIEF.md): fastest high-level overview of the problem, approach, and best result
 - [Model Card](report/MODEL_CARD.md): intended use, benchmark numbers, and limitations for the best checkpoint
 - [Experiment Log](report/EXPERIMENT_LOG.md): full record of what was tried and what worked
-- [Interview/Resume Guide](report/INTERVIEW_RESUME_GUIDE.md): concise ways to present the project in interviews
 
 ## Results Snapshot
 
@@ -184,10 +182,8 @@ The concrete next-step plan for augmentation, RGB experiments, and outside-datas
 
 The running record of completed experiments and what they taught us is tracked in [report/EXPERIMENT_LOG.md](report/EXPERIMENT_LOG.md).
 
-For a concise interview-ready summary, see [report/PROJECT_BRIEF.md](report/PROJECT_BRIEF.md). For checkpoint-specific limitations and intended use, see [report/MODEL_CARD.md](report/MODEL_CARD.md). For ready-to-use resume bullets and an interview walkthrough, see [report/INTERVIEW_RESUME_GUIDE.md](report/INTERVIEW_RESUME_GUIDE.md).
+For a concise summary, see [report/PROJECT_BRIEF.md](report/PROJECT_BRIEF.md). For checkpoint-specific limitations and intended use, see [report/MODEL_CARD.md](report/MODEL_CARD.md).
 
 ## Data Note
 
-The original dataset is not included in this public-facing copy. See [data/README.md](data/README.md) for the expected directory layout and how the project uses `data/raw/` and `data/splits/`.
-
-This also means the repository is safe to share publicly as a project adaptation: it documents the workflow and results without exposing private or non-public source materials.
+The original dataset is not included here. See [data/README.md](data/README.md) for the expected directory layout and how the project uses `data/raw/` and `data/splits/`.

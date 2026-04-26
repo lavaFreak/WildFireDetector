@@ -1,6 +1,6 @@
 # Data Layout
 
-This public-facing copy does not include the original wildfire image dataset.
+The original wildfire image dataset is not included in this repository.
 
 The project expects the following directories when reproducing the full pipeline:
 

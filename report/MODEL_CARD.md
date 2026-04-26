@@ -44,9 +44,9 @@ Confusion matrix:
 
 This model is appropriate for:
 
-- portfolio/demo classification of wildfire-style images
+- experimentation with wildfire-style image classification
 - experimentation with wildfire image classification workflows
-- discussing model iteration, benchmarking, and domain-shift handling in interviews
+- evaluating model iteration, benchmarking, and domain-shift handling
 
 This model is not presented as:
 
@@ -74,10 +74,10 @@ The repository supports arbitrary image classification through:
 
 ## Known Limitations
 
-- The dataset used for the original project is not distributed in this public repo.
+- The dataset used for the original project is not distributed in this repository.
 - Results may not transfer cleanly to very different domains such as satellite-only or smoke-only imagery.
 - The project focuses on classification, not localization or segmentation.
-- The benchmark is useful for project evaluation, but it is still a portfolio benchmark rather than a deployment guarantee.
+- The benchmark is useful for project evaluation, but it is not a deployment guarantee.
 
 ## Important Historical Note
 
@@ -87,13 +87,3 @@ Earlier RGB checkpoints in this repository used a legacy tensor-layout path duri
 - trains new RGB checkpoints with explicit channel-first layout metadata
 
 The model in this card is part of the corrected CHW training path.
-
-## Suggested Interview Framing
-
-If you are presenting this project in an interview, the most useful framing is:
-
-- baseline comparison
-- reproducible experimentation
-- bug discovery and correction
-- careful outside-data handling
-- final accuracy improvement without changing the held-out benchmark

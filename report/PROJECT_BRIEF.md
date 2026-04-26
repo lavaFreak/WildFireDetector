@@ -2,7 +2,7 @@
 
 ## One-Sentence Summary
 
-WildFireDetector is a public-facing wildfire image-classification project that compares linear baselines against CNNs, adds reproducible dataset handling and evaluation tooling, and improves the best model to `96.5%` test accuracy through corrected RGB preprocessing plus outside-data pretraining and in-domain fine-tuning.
+WildFireDetector is a wildfire image-classification project that compares linear baselines against CNNs, adds reproducible dataset handling and evaluation tooling, and improves the best model to `96.5%` test accuracy through corrected RGB preprocessing plus outside-data pretraining and in-domain fine-tuning.
 
 ## Problem
 
@@ -13,7 +13,7 @@ Given an input image, classify it as either:
 
 The project focuses on binary image classification rather than detection or segmentation, which keeps the modeling goal narrow and makes baseline-vs-CNN comparisons easier to interpret.
 
-## Why This Project Is Stronger Than A Typical Class Project
+## Key Strengths
 
 - It starts with simple baselines instead of jumping straight to a CNN.
 - It preserves a fixed validation/test benchmark while experimenting.
@@ -23,7 +23,7 @@ The project focuses on binary image classification rather than detection or segm
 
 ## My Role
 
-- Adapted an earlier wildfire-classification problem into a standalone public repository.
+- Adapted an earlier wildfire-classification problem into a standalone repository.
 - Added logistic-regression baselines for comparison.
 - Reworked the training and evaluation pipeline to be more reproducible.
 - Added support for arbitrary-image inference through a CLI and local app.
@@ -56,13 +56,12 @@ Best checkpoint:
 - Pretraining on outside data and then fine-tuning back on the in-domain split worked much better.
 - A clean preprocessing pipeline can matter as much as architecture changes.
 
-## Good Interview Talking Points
+## Technical Discussion Points
 
 - Why logistic regression was still worth including.
 - Why `256x256` grayscale did not help as much as corrected `64x64` RGB.
 - How the RGB tensor-layout bug was discovered and fixed.
 - Why direct dataset mixing hurt precision and why fine-tuning improved it.
-- How the project was adapted into a public portfolio piece without exposing proprietary materials.
 
 ## Related Docs
 

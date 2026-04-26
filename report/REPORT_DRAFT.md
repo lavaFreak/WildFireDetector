@@ -8,7 +8,7 @@ Build a binary image classifier that distinguishes wildfire images from no-fire 
 
 This project grew out of earlier wildfire-detection work I contributed to during an internship with Other Orb LLC. For a later class project, I adapted that general problem into a more self-contained experiment by adding logistic-regression baselines and organizing the workflow around reproducible dataset preparation, training, and result summaries.
 
-This public repository is a presentation-oriented adaptation of that work. It is meant to show the engineering workflow and modeling comparison clearly without exposing proprietary code or internal materials.
+This repository adapts that work without exposing proprietary code or internal materials.
 
 ## Workflow
 
@@ -45,7 +45,7 @@ The project now shows a fuller progression than the original class version:
 
 ## Limitations
 
-- The original dataset is not included in this public repository copy.
+- The original dataset is not included in this repository.
 - The project currently focuses on offline experimentation, not deployment or real-time inference.
 - Model and dataset provenance should be documented more explicitly before treating the project as a research-grade benchmark.
 
@@ -53,4 +53,4 @@ The project now shows a fuller progression than the original class version:
 
 - Document dataset provenance and licensing more precisely.
 - If more experimentation is needed, test corrected larger-input outside-data training rather than random hyperparameter changes.
-- Continue improving demo quality and project presentation rather than chasing small metric gains for their own sake.
+- Continue improving dataset provenance notes and evaluation clarity rather than chasing small metric gains for their own sake.
